@@ -17,6 +17,9 @@ use Log;
 use Selfreliance\AdvCash\Service\MerchantWebService;
 use Selfreliance\AdvCash\Service\authDTO;
 use Selfreliance\AdvCash\Service\getBalances;
+use Selfreliance\AdvCash\Service\sendMoney;
+use Selfreliance\AdvCash\Service\sendMoneyRequest;
+use Selfreliance\AdvCash\Service\validationSendMoney;
 class AdvCash implements AdvCashInterface
 {
 	use ValidatesRequests;
@@ -112,7 +115,7 @@ class AdvCash implements AdvCashInterface
 			echo '</form>';
 		$content = ob_get_contents();
 		ob_end_clean();
-
+		// dd($content);
 		return $content;
 	}
 
@@ -184,7 +187,37 @@ class AdvCash implements AdvCashInterface
 	}
 
 	function send_money($payment_id, $amount, $address, $currency){
-		
+		$amount = number_format($amount, 4, ".", "");
+
+		$arg1 = new sendMoneyRequest();
+		$arg1->amount = $amount;
+		$arg1->currency = $currency;
+		$arg1->email = $address;
+		$arg1->note = Config::get('app.name')." ".$payment_id;
+		$arg1->savePaymentTemplate = false;
+
+		$validationSendMoney = new validationSendMoney();
+		$validationSendMoney->arg0 = $this->arg0;
+		$validationSendMoney->arg1 = $arg1;
+
+		$sendMoney = new sendMoney();
+		$sendMoney->arg0 = $this->arg0;
+		$sendMoney->arg1 = $arg1;
+
+		try {
+		    $this->merchantWebService->validationSendMoney($validationSendMoney);
+		    $sendMoneyResponse = $this->merchantWebService->sendMoney($sendMoney);
+
+			$PassData              = new \stdClass();
+			$PassData->transaction = $sendMoneyResponse->return;
+			$PassData->sending     = true;
+			$PassData->add_info    = [
+				"full_data" => $sendMoneyResponse
+			];
+			return $PassData;
+		} catch (Exception $e) {
+			throw new \Exception($e->faultstring);
+		}
 	}
 
 	function cancel_payment(Request $request){
