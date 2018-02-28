@@ -221,6 +221,6 @@ class AdvCash implements AdvCashInterface
 	}
 
 	function cancel_payment(Request $request){
-		
+		return redirect(env('PERSONAL_LINK_CAB'));
 	}
 }
