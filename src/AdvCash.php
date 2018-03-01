@@ -28,10 +28,14 @@ class AdvCash implements AdvCashInterface
 		$this->memo = $memo;
 		return $this;
 	}
-	protected $merchantWebService;
-	protected $arg0;
 
 	public function __construct(){
+
+	}
+
+	protected $merchantWebService;
+	protected $arg0;
+	public function connect(){
 		$this->merchantWebService = new MerchantWebService();
 		$this->arg0 = new authDTO();
 		$this->arg0->apiName = Config::get('advcash.api_name');
@@ -40,6 +44,7 @@ class AdvCash implements AdvCashInterface
 	}
 
 	function balance($unit = "USD"){
+		$this->connect();
 		$getBalances = new getBalances();
 		$getBalances->arg0 = $this->arg0;
 		try {
@@ -187,6 +192,7 @@ class AdvCash implements AdvCashInterface
 	}
 
 	function send_money($payment_id, $amount, $address, $currency){
+		$this->connect();
 		$amount = number_format($amount, 4, ".", "");
 
 		$arg1 = new sendMoneyRequest();
